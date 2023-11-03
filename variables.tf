@@ -146,7 +146,7 @@ variable "source_code_hash" {
   filename or s3_key. The usual way to set this is filebase64sha256('file.zip') where 'file.zip' is the local filename 
   of the lambda function source archive.
   EOF
-  default     = ""
+  default     = null
 
 }
 
@@ -163,5 +163,16 @@ variable "lambda_environment" {
   })
   description = "Environment (e.g. env variables) configuration for the Lambda function enable you to dynamically pass settings to your function code and libraries"
   default     = null
+}
 
+variable "vpc_config" {
+  type = object({
+    security_group_ids = list(string)
+    subnet_ids         = list(string)
+  })
+  description = <<EOF
+  Provide this to allow your function to access your VPC (if both 'subnet_ids' and 'security_group_ids' are empty then
+  vpc_config is considered to be empty or unset, see https://docs.aws.amazon.com/lambda/latest/dg/vpc.html for details).
+  EOF
+  default     = null
 }

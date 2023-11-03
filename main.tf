@@ -40,6 +40,14 @@ resource "aws_lambda_function" "default" {
     }
   }
 
+  dynamic "vpc_config" {
+    for_each = var.vpc_config != null ? [var.vpc_config] : []
+    content {
+      security_group_ids = vpc_config.value.security_group_ids
+      subnet_ids         = vpc_config.value.subnet_ids
+    }
+  }
+
   tags = merge(
     var.labels,
     var.tags,

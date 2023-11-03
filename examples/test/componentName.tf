@@ -25,9 +25,19 @@ variable "labels" {
   }
 }
 
+variable "vpc_config" {
+  type = object({
+    security_group_ids = list(string)
+    subnet_ids         = list(string)
+  })
+  default = {
+    security_group_ids = ["sg-12345678901231"]
+    subnet_ids         = ["subnet-1234567890"]
+  }
+}
 
 variable "cloudteam_policy_names" {
-  default = ["cloud-service-policy-global-deny-1", "cloud-service-policy-global-deny-2"]
+  default = ["a204161-service-policy-global-deny-1", "a204161-service-policy-global-deny-2"]
 }
 
 # <ENV>.tfvars end
@@ -63,21 +73,21 @@ data "archive_file" "lambda_zip" {
 
 
 module "lambda_function_file" {
-  source = "../.."
-
+  source           = "../.."
   runtime          = "python3.8"
   handler          = "lambda_function.lambda_handler"
   memory_size      = "256"
   timeout          = 120
   filename         = data.archive_file.lambda_zip.output_path
   depends_on       = [data.archive_file.lambda_zip]
-  source_code_hash = data.archive_file.lambda_zip.output_sha
+  source_code_hash = filebase64sha256(data.archive_file.lambda_zip.output_path)
   lambda_environment = {
     variables = {
       ERROR_QUEUE_URL = "http://ERROR_QUEUE_URL"
       INPUT_QUEUE_URL = "http://INPUT_QUEUE_URL"
     }
   }
+  vpc_config = var.vpc_config
   function_role_policy_statements = {
     policy-sqs = [
       {
